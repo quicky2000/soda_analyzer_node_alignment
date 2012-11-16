@@ -66,7 +66,12 @@ namespace osm_diff_analyzer_node_alignment
     void node_alignment_analyzer::generic_analyze(const osm_api_data_types::osm_core_element * const p_object)
   {
 
+#ifndef FORCE_USE_OF_REINTERPRET_CAST
     const T * const l_casted_object = dynamic_cast<const T * const>(p_object);
+#else
+    const T * const l_casted_object = reinterpret_cast<const T * const>(p_object);
+#endif // FORCE_USE_OF_REINTERPRET_CAST
+
     if(l_casted_object==NULL)
       {
         std::cout << "ERROR : invalid " << T::get_type_str() << " cast for object id " << p_object->get_id() << std::endl ;

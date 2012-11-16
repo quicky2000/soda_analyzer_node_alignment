@@ -1,0 +1,4 @@
+depend:osm_diff_analyzer_cpp_if 
+CFLAGS:-Wall -g -ansi -pedantic
+LDFLAGS:
+

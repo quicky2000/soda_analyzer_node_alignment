@@ -22,9 +22,12 @@
 #include "way.h"
 #include "node.h"
 #include "osm_way.h"
+#include "svg_report.h"
+#include "linear_regression.h"
 #include <sstream>
 #include <limits>
 #include <cmath>
+#include <iomanip>
 
 namespace osm_diff_analyzer_node_alignment
 {
@@ -43,6 +46,7 @@ namespace osm_diff_analyzer_node_alignment
   {
     node * l_node = new node(p_node.get_id(),p_node.get_user(),p_node.get_user_id(),p_node.get_version(),p_node.get_lat(),p_node.get_lon(),true);
     m_nodes.insert(std::map<osm_api_data_types::osm_object::t_osm_id,node*>::value_type(p_node.get_id(),l_node));
+    m_nodes_to_check.insert(p_node.get_id());
   }
 
   //----------------------------------------------------------------------------
@@ -64,7 +68,6 @@ namespace osm_diff_analyzer_node_alignment
   //----------------------------------------------------------------------------
   void changeset::search_aligned_ways(std::ofstream & p_stream)
   {
-    std::cout << "Search aligned ways in changeset " << m_id << std::endl ;
     // First check if modified ways has been aligned to eliminate a maximum of nodes to limite API
     // call that will be done later for each node to determine to which way it belongs
     // If a way has been aligned all its nodes will be removed and no more analyzed
@@ -76,11 +79,11 @@ namespace osm_diff_analyzer_node_alignment
       }
 
 
-    std::cout << "Search aligned nodes in changeset " << m_id << std::endl ;
     // For each node get ways
-    while(m_nodes.size())
+    while(m_nodes_to_check.size())
       {
-        std::map<osm_api_data_types::osm_object::t_osm_id,node*>::iterator l_iter_node = m_nodes.begin();
+        std::set<osm_api_data_types::osm_object::t_osm_id>::iterator l_iter_id = m_nodes_to_check.begin();
+        std::map<osm_api_data_types::osm_object::t_osm_id,node*>::iterator l_iter_node = m_nodes.find(*l_iter_id);
 
         bool l_aligned = false;
         const std::vector<osm_api_data_types::osm_way*> * const l_ways = m_api->get_node_ways(l_iter_node->second->get_id());
@@ -93,12 +96,17 @@ namespace osm_diff_analyzer_node_alignment
                 l_aligned = check_way((*l_iter_way)->get_id(),(*l_iter_way)->get_node_refs());
                 m_checked_ways.insert((*l_iter_way)->get_id());
               }
+          }
+        for(std::vector<osm_api_data_types::osm_way*>::const_iterator l_iter_way = l_ways->begin();
+            l_iter_way != l_ways->end();
+            ++l_iter_way)
+          {
             delete *l_iter_way;
           }
+        delete l_ways;
         if(!l_aligned)
           {
-            delete l_iter_node->second;
-            m_nodes.erase(l_iter_node);
+            m_nodes_to_check.erase(l_iter_id);
           }
 
       }
@@ -111,9 +119,9 @@ namespace osm_diff_analyzer_node_alignment
     bool l_result = false;
     if(p_node_refs.size()> m_min_way_node_nb)
       {
-        std::cout << "Check way : " << p_id << std::endl ;
         std::vector<node*> l_modified_nodes;
-        std::vector<osm_api_data_types::osm_object::t_osm_id> l_unchanged_nodes;
+        std::map<osm_api_data_types::osm_object::t_osm_id,std::pair<double,double> > m_old_nodes_coordinates;
+
         // Check if some existings nodes belong to this way
         for(std::vector<osm_api_data_types::osm_object::t_osm_id>::const_iterator l_way_node = p_node_refs.begin();
             l_way_node != p_node_refs.end();
@@ -124,24 +132,15 @@ namespace osm_diff_analyzer_node_alignment
               {
                 l_modified_nodes.push_back(l_node_iter->second);
               }
-            else
-              {
-                l_unchanged_nodes.push_back(*l_way_node);
-              }
           }
         // check if more than coef % node has been modified : an abusive alignment modify almost every node except one
         float l_modif_rate = ((float)(l_modified_nodes.size())/((float)p_node_refs.size()));
-        std::cout << "Way modif rate = " << l_modif_rate << std::endl ;
-        std::cout << "nb modified nodes  = " <<  l_modified_nodes.size() << " vs nb nodes " << p_node_refs.size() << std::endl ;
         if(l_modified_nodes.size() == p_node_refs.size() - 2 || l_modif_rate > m_modif_rate_min_level)
           {
             // Check how many nodes has been moved by comparing with previous version of node
             // The check stop if the number of unmoved node is sufficiant to be sure that the modification rate will not be reached
             uint32_t l_nb_moved_node = l_modified_nodes.size();
             l_modif_rate = ((float)(l_nb_moved_node)/((float)p_node_refs.size()));
-            std::vector<std::pair<double,double> > l_old_coordinates;
-            std::vector<std::pair<double,double> > l_new_coordinates;
-            std::cout << "Check how many nodes has been moved" << std::endl ;
             for(std::vector<node*>::const_iterator l_iter_node = l_modified_nodes.begin();
                 l_iter_node != l_modified_nodes.end() && ( l_modif_rate > m_modif_rate_min_level || l_nb_moved_node >= p_node_refs.size() - 2 );
                 ++l_iter_node)
@@ -152,47 +151,90 @@ namespace osm_diff_analyzer_node_alignment
                   {
                     --l_nb_moved_node;
                     l_modif_rate = ((float)(l_nb_moved_node)/((float)p_node_refs.size()));
-                    std::cout << "Recomputed moved rate : " << l_modif_rate << std::endl ;
                   }
                 else
                   {
-                    l_old_coordinates.push_back(std::pair<double,double>(l_previous_node->get_lat(),l_previous_node->get_lon()));
-                    l_new_coordinates.push_back(std::pair<double,double>((*l_iter_node)->get_lat(),(*l_iter_node)->get_lon()));
+                    m_old_nodes_coordinates.insert(std::map<osm_api_data_types::osm_object::t_osm_id,std::pair<double,double> >::value_type((*l_iter_node)->get_id(),std::pair<double,double>(l_previous_node->get_lat(),l_previous_node->get_lon())));
                   }
                 delete l_previous_node;
               }
             // Check if verification has been completed : sign of complete aligned way
             if(l_modif_rate > m_modif_rate_min_level || l_nb_moved_node >= p_node_refs.size() - 2 )
               {
-                std::cout << "Getting unmodifed coordinates" << std::endl ;
-                // Complete coordinates vectors with unchanged nodes
-                for(std::vector<osm_api_data_types::osm_object::t_osm_id>::const_iterator l_node_iter = l_unchanged_nodes.begin();
-                    l_node_iter != l_unchanged_nodes.end();
-                    ++l_node_iter)
+
+                //Reconstitute ways
+                std::vector<std::pair<double,double> > l_old_coordinates2;
+                std::vector<std::pair<double,double> > l_new_coordinates2;
+                for(std::vector<osm_api_data_types::osm_object::t_osm_id>::const_iterator l_way_node = p_node_refs.begin();
+                    l_way_node != p_node_refs.end();
+                    ++l_way_node)
                   {
-                    const osm_api_data_types::osm_node * l_previous_node = m_api->get_node_version(*l_node_iter);
-                    l_new_coordinates.push_back(std::pair<double,double>(l_previous_node->get_lat(),l_previous_node->get_lon()));
-                    l_old_coordinates.push_back(std::pair<double,double>(l_previous_node->get_lat(),l_previous_node->get_lon())); 
+                    std::pair<double,double> l_current_coordinates;
+                    std::map<osm_api_data_types::osm_object::t_osm_id,node*>::iterator l_node_iter = m_nodes.find(*l_way_node);
+                    bool l_bad_coordinates = false;
+                    if(l_node_iter != m_nodes.end())
+                      {
+                        l_current_coordinates = std::pair<double,double>(l_node_iter->second->get_lat(),l_node_iter->second->get_lon());
+                      }
+                    else 
+                      {
+                        const osm_api_data_types::osm_node * l_node = m_api->get_node_version(*l_way_node);
+                        if(l_node != NULL)
+                          {
+                            l_current_coordinates = std::pair<double,double>(l_node->get_lat(),l_node->get_lon());
+                            delete l_node;
+                          }
+                        else
+                          {
+                            l_bad_coordinates = true;
+                          }
+                      }
+                    
+                    if(!l_bad_coordinates)
+                      {
+                        l_new_coordinates2.push_back(l_current_coordinates);
+                      }
+
+                    std::map<osm_api_data_types::osm_object::t_osm_id,std::pair<double,double> >::const_iterator l_iter_coordinates = m_old_nodes_coordinates.find(*l_way_node);
+                    if(l_iter_coordinates != m_old_nodes_coordinates.end())
+                      {
+                        l_old_coordinates2.push_back(l_iter_coordinates->second);
+                      }
+                    else if(!l_bad_coordinates)
+                      {
+                        l_old_coordinates2.push_back(l_current_coordinates);
+                      }
                   }
-                std::cout << "Computing alignment" << std::endl ;
-                double l_old_max_diff_square ;
-                double l_old_result = moindre_carres(l_old_coordinates,l_old_max_diff_square);
-                double l_new_max_diff_square ;
-                double l_new_result = moindre_carres(l_new_coordinates,l_new_max_diff_square);
-                std::cout << "Old = (" << l_old_result << "," << l_old_max_diff_square << ") New = (" << l_new_result << "," << l_new_max_diff_square << ")" << std::endl ;
+
+
+                linear_regression l_regress_old;
+                double l_old_result = l_regress_old.compute(l_old_coordinates2);
+                linear_regression l_regress_new;
+                double l_new_result = l_regress_new.compute(l_new_coordinates2);
+
+                //TO DELETE                double l_old_max_diff_square ;
+                //TO DELETE                double l_old_result = moindre_carres(l_old_coordinates2,l_old_max_diff_square);
+                //TO DELETE                double l_new_max_diff_square ;
+                //TO DELETE                double l_new_result = moindre_carres(l_new_coordinates2,l_new_max_diff_square);
                 double l_alignment_modification_rate = ( l_new_result ? l_old_result / l_new_result : std::numeric_limits<double>::max());
-                std::cout << "Alignment modification rate = " << l_alignment_modification_rate << std::endl ;
+                double l_old_max_diff_square = l_regress_old.get_max_alignment_square();
+                double l_new_max_diff_square = l_regress_new.get_max_alignment_square();
                 double l_min_square_modification_rate = ( l_new_max_diff_square ? l_old_max_diff_square / l_new_max_diff_square : std::numeric_limits<double>::max());
-		std::cout << "Min square modification rate = " << l_min_square_modification_rate << std::endl ;
+
                 // Way has been aligned, remove node form analyzis queue to reduce API requests
                 if(l_alignment_modification_rate > m_min_alignment_modification_rate && l_min_square_modification_rate  > m_min_alignment_modification_rate)
                   {
-		    create_svg(p_id,l_old_coordinates,l_new_coordinates);
+		    create_svg(p_id,l_old_coordinates2,l_new_coordinates2);
                     l_result = true;
                     std::stringstream l_id_stream;
                     l_id_stream << m_id;
                     std::stringstream l_way_id_stream;
                     l_way_id_stream << p_id;
+
+                    std::string l_old_gpx = "way_"+l_way_id_stream.str()+"_c"+l_id_stream.str()+"_old";
+                    create_gpx(l_old_gpx,l_old_coordinates2);
+                    std::string l_new_gpx = "way_"+l_way_id_stream.str()+"_c"+l_id_stream.str()+"_new";
+                    create_gpx(l_new_gpx,l_new_coordinates2);
 
                     std::string l_object_url;
                     m_api->get_object_browse_url(l_object_url,"way",p_id); 
@@ -201,19 +243,59 @@ namespace osm_diff_analyzer_node_alignment
                     std::string l_user_url;
                     m_api->get_user_browse_url(l_user_url,m_user_id,m_user_name);
                     m_report << "<A HREF=\"" << l_object_url << "\">Way " << l_way_id_stream.str() << "</A> has been aligned by <A HREF=\"" << l_user_url << "\">" << m_user_name << "</A> in <A HREF=\"" << l_changeset_url << "\">Changeset " << l_id_stream.str() << "</A><BR>" << std::endl ;
-                    for(std::vector<node*>::iterator l_iter = l_modified_nodes.begin();
+                    m_report << "With <B>alignment modification rate = " << l_alignment_modification_rate << "</B> and <B>Min square modification rate = " << l_min_square_modification_rate << "</B><BR>"  << std::endl ;
+                    //                    m_report << "<TABLE><TR><TD>" << std::endl ;
+                    m_report << "<IMG SRC=\"./way_" << l_way_id_stream.str() << ".svg\" ALT=\"Way_" << l_way_id_stream.str() << ".svg\" TITLE=\"Way " << l_way_id_stream.str() << "\" ALIGN=\"MIDDLE\" /><BR>" << std::endl ;
+                    //                    m_report << "</TD><TD>" << std::endl ;
+                    std::string l_map_name = "map_"+l_way_id_stream.str()+"_c"+l_id_stream.str();
+                    m_report << "<button type=\"button\" onclick=\"init('" << l_map_name << "','" << l_old_gpx << ".gpx','" << l_new_gpx << ".gpx'," << l_regress_new.get_average_x() << "," << l_regress_new.get_average_y() << ")\">Display Map</button>" << std::endl;
+                    m_report << "<div id=\"" << l_map_name << "\" class=\"smallmap\">" <<std::endl ;
+                    m_report << "</div>" << std::endl ;
+                    //                    m_report << "</TD></TR></TABLE>" ;
+                    m_report << "<HR/>" << std::endl ;
+                  for(std::vector<node*>::iterator l_iter = l_modified_nodes.begin();
                         l_iter != l_modified_nodes.end();
                         ++l_iter)
                       {
-                    
-                        m_nodes.erase((*l_iter)->get_id());
-                        delete *l_iter;
+                        m_nodes_to_check.erase((*l_iter)->get_id());
                       }
                   }
               }
           }
       }
     return l_result;
+  }
+
+  //----------------------------------------------------------------------------
+  void changeset::create_gpx(const std::string & p_way_name,
+                             const std::vector<std::pair<double,double> > & p_points)
+  {
+    std::string l_file_name = p_way_name + ".gpx";
+    std::ofstream l_gpx_file(l_file_name.c_str());
+    if(!l_gpx_file.is_open())
+      {
+        std::cout << "Error when creating GPX file \"" << l_file_name << "\"" << std::endl ;
+      }
+    
+    l_gpx_file << "<?xml version=\"1.0\"?>" << std::endl ;
+    l_gpx_file << "<gpx version=\"1.0\""  << std::endl ;
+    l_gpx_file << "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""  << std::endl ;
+    l_gpx_file << "xmlns=\"http://www.topografix.com/GPX/1/0\""  << std::endl ;
+    l_gpx_file << "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd\">"  << std::endl ;
+    l_gpx_file << "<trk>" << std::endl ;
+    l_gpx_file << "<name>" << p_way_name << "</name>" << std::endl ;
+    l_gpx_file << "<trkseg>" << std::endl ;
+    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_points.begin();
+        l_iter != p_points.end();
+        ++l_iter)
+      {
+        l_gpx_file << "<trkpt lat=\""<< std::setprecision(15) << l_iter->first << "\" lon=\"" << l_iter->second << "\">" << std::endl ;
+        l_gpx_file << "</trkpt>" << std::endl ;
+     }
+l_gpx_file << "</trkseg>" << std::endl ;
+l_gpx_file << "</trk>" << std::endl ;
+l_gpx_file << "</gpx>" << std::endl ;
+    l_gpx_file.close();
   }
 
   void changeset::create_svg(const osm_api_data_types::osm_object::t_osm_id & p_id,
@@ -223,147 +305,82 @@ namespace osm_diff_analyzer_node_alignment
     std::stringstream l_id_stream;
     l_id_stream << p_id;
     std::string l_file_name = "way_"+l_id_stream.str()+".svg";
-    uint32_t l_width = 600;
-    uint32_t l_height = 600;
-    uint32_t l_circle_size = 5;
-    double l_min_lat = std::numeric_limits<double>::max();
-    double l_max_lat = -(std::numeric_limits<double>::max()- 1 );
-    double l_min_lon = std::numeric_limits<double>::max();
-    double l_max_lon = -(std::numeric_limits<double>::max()- 1 );
-    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_old_list.begin() ;
-        l_iter != p_old_list.end();
-        ++l_iter)
-      {
-        if(l_iter->first > l_max_lat)
-          {
-            l_max_lat = l_iter->first;
-          }
-        if(l_iter->first < l_min_lat)
-          {
-            l_min_lat = l_iter->first;
-          }
-        if(l_iter->second > l_max_lon)
-          {
-            l_max_lon = l_iter->second;
-          }
-        if(l_iter->second < l_min_lon)
-          {
-            l_min_lon = l_iter->second;
-          }
-      }
-    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_new_list.begin() ;
-        l_iter != p_new_list.end();
-        ++l_iter)
-      {
-        if(l_iter->first > l_max_lat)
-          {
-            l_max_lat = l_iter->first;
-          }
-        if(l_iter->first < l_min_lat)
-          {
-            l_min_lat = l_iter->first;
-          }
-        if(l_iter->second > l_max_lon)
-          {
-            l_max_lon = l_iter->second;
-          }
-        if(l_iter->second < l_min_lon)
-          {
-            l_min_lon = l_iter->second;
-          }
-      }
-    double l_diff_lat = l_max_lat - l_min_lat ;
-    double l_diff_lon = l_max_lon - l_min_lon;
-    std::cout << "l_min_lat " << l_min_lat << std::endl ;
-    l_min_lat = l_min_lat - l_diff_lat * 0.1;
-    std::cout << "l_min_lat " << l_min_lat << std::endl ;
-    std::cout << "l_max_lat " << l_max_lat << std::endl ;
-    l_max_lat = l_max_lat + l_diff_lat * 0.1;
-    std::cout << "l_max_lat " << l_max_lat << std::endl ;
-    std::cout << "l_min_lon " << l_min_lon << std::endl ;
-    l_min_lon = l_min_lon - l_diff_lon * 0.1;
-    std::cout << "l_min_lon " << l_min_lon << std::endl ;
-    std::cout << "l_max_lon " << l_max_lon << std::endl ;
-    l_max_lon = l_max_lon + l_diff_lon * 0.1;
-    std::cout << "l_max_lon " << l_max_lon << std::endl ;
+
+    svg_report l_svg_report;
+    l_svg_report.update_xtrem_coordinates(p_old_list);
+    l_svg_report.update_xtrem_coordinates(p_new_list);
+    l_svg_report.adjust_xtrem_coordinates(0.1);
   
-    std::ofstream l_svg_file(l_file_name.c_str());
-    l_svg_file << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << std::endl ;
-    l_svg_file << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"" << l_width << "\" height=\"" << l_height << "\">" << std::endl ;
-    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_old_list.begin() ;
-        l_iter != p_old_list.end();
-        ++l_iter)
-      {
-        double l_x = (( l_width - 1.0) * (l_iter->second -l_min_lon ))/ (l_max_lon - l_min_lon);
-        double l_y = (( l_height - 1.0) * (l_max_lat - l_iter->first ))/ (l_max_lat - l_min_lat);
-        l_svg_file << "<circle cx=\""<< l_x << "\" cy=\"" << l_y << "\" r=\""<< (l_circle_size +1 ) <<"\" fill=\"red\" />" << std::endl ;
-      }
-    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_new_list.begin() ;
-        l_iter != p_new_list.end();
-        ++l_iter)
-      {
-        double l_x = (( l_width - 1.0) * (l_iter->second -l_min_lon ))/ (l_max_lon - l_min_lon);
-        double l_y = (( l_height - 1.0) * (l_max_lat - l_iter->first ))/ (l_max_lat - l_min_lat);
-        l_svg_file << "<circle cx=\""<< l_x << "\" cy=\"" << l_y << "\" r=\""<< l_circle_size <<"\" fill=\"blue\" />" << std::endl ;
-      }
-    l_svg_file << "</svg>" << std::endl ;
-    l_svg_file.close();
+    l_svg_report.open(l_file_name);
+    l_svg_report.draw_polyline(p_old_list,"blue",1);
+    l_svg_report.draw_polyline(p_new_list,"red",0);
+    l_svg_report.close();
 
   }
 
-  double changeset::moindre_carres(const std::vector<std::pair<double,double> > & p_list, double & p_max_alignment_square)
-  {
-    p_max_alignment_square = 0;
-    double l_sum = 0;
-    double l_average_x = 0;
-    double l_average_y = 0;
-    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
-        l_iter != p_list.end();
-        ++l_iter)
-      {
-        l_average_x += l_iter->first;
-        l_average_y += l_iter->second;
-      }
-    l_average_x = l_average_x / p_list.size(); 
-    l_average_y = l_average_y / p_list.size(); 
-    std::cout << "Average x = " << l_average_x << std::endl ;
-    std::cout << "Average y = " << l_average_y << std::endl ;
-  
-    // a compuation
-    double l_a = 0;
-    double l_num = 0;
-    double l_den = 0;
-    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
-        l_iter != p_list.end();
-        ++l_iter)
-      {
-        l_num += (l_iter->first - l_average_x) * (l_iter->second - l_average_x);
-        l_den += (l_iter->first - l_average_x) * (l_iter->first - l_average_x);
-      }  
-    if(l_den)
-      {
-        l_a = l_num / l_den;
-        double l_b = l_average_y - l_a * l_average_x;
-        for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
-            l_iter != p_list.end();
-            ++l_iter)
-          {
-            double l_diff = (l_iter->second - l_a * l_iter->first - l_b);
-            double l_diff_square = l_diff * l_diff;
-            std::cout << "Max = " << p_max_alignment_square << " " << l_diff_square << std::endl ;
-            if(p_max_alignment_square < l_diff_square)
-              {
-                p_max_alignment_square = l_diff_square;
-              }
-            l_sum += l_diff_square; 
-          }      
-      }
-    else
-      {
-        std::cout << "Droite verticale" << std::endl ;
-      }
-    return l_sum;
-  }
+  //TO DELETE  double changeset::moindre_carres(const std::vector<std::pair<double,double> > & p_list, double & p_max_alignment_square)
+  //TO DELETE  {
+  //TO DELETE    p_max_alignment_square = 0;
+  //TO DELETE    double l_sum = 0;
+  //TO DELETE    double l_average_x = 0;
+  //TO DELETE    double l_average_y = 0;
+  //TO DELETE    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
+  //TO DELETE        l_iter != p_list.end();
+  //TO DELETE        ++l_iter)
+  //TO DELETE      {
+  //TO DELETE        l_average_x += l_iter->first;
+  //TO DELETE        l_average_y += l_iter->second;
+  //TO DELETE      }
+  //TO DELETE    l_average_x = l_average_x / p_list.size(); 
+  //TO DELETE    l_average_y = l_average_y / p_list.size(); 
+  //TO DELETE  
+  //TO DELETE    // a computation
+  //TO DELETE    double l_a = 0;
+  //TO DELETE    double l_num = 0;
+  //TO DELETE    double l_den = 0;
+  //TO DELETE    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
+  //TO DELETE        l_iter != p_list.end();
+  //TO DELETE        ++l_iter)
+  //TO DELETE      {
+  //TO DELETE        l_num += (l_iter->first - l_average_x) * (l_iter->second - l_average_x);
+  //TO DELETE        l_den += (l_iter->first - l_average_x) * (l_iter->first - l_average_x);
+  //TO DELETE      }  
+  //TO DELETE    if(l_den)
+  //TO DELETE      {
+  //TO DELETE        l_a = l_num / l_den;
+  //TO DELETE        double l_b = l_average_y - l_a * l_average_x;
+  //TO DELETE        for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
+  //TO DELETE            l_iter != p_list.end();
+  //TO DELETE            ++l_iter)
+  //TO DELETE          {
+  //TO DELETE            double l_diff = (l_iter->second - l_a * l_iter->first - l_b);
+  //TO DELETE            double l_diff_square = l_diff * l_diff;
+  //TO DELETE            if(p_max_alignment_square < l_diff_square)
+  //TO DELETE              {
+  //TO DELETE                p_max_alignment_square = l_diff_square;
+  //TO DELETE              }
+  //TO DELETE            l_sum += l_diff_square; 
+  //TO DELETE          }      
+  //TO DELETE      }
+  //TO DELETE    else
+  //TO DELETE      {
+  //TO DELETE	l_a = l_den / l_num;
+  //TO DELETE	double l_b = l_average_x - l_a * l_average_y;
+  //TO DELETE	for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
+  //TO DELETE	    l_iter != p_list.end();
+  //TO DELETE	    ++l_iter)
+  //TO DELETE	  {
+  //TO DELETE	    double l_diff = (l_iter->first - l_a * l_iter->second - l_b);
+  //TO DELETE	    double l_diff_square = l_diff * l_diff;
+  //TO DELETE            if(p_max_alignment_square < l_diff_square)
+  //TO DELETE              {
+  //TO DELETE                p_max_alignment_square = l_diff_square;
+  //TO DELETE              }
+  //TO DELETE            l_sum += l_diff_square;
+  //TO DELETE	  }      
+  //TO DELETE      }
+  //TO DELETE    return l_sum;
+  //TO DELETE  }
 
 
   float changeset::m_modif_rate_min_level = 0.9;

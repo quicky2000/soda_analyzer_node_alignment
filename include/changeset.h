@@ -55,7 +55,9 @@ namespace osm_diff_analyzer_node_alignment
     void create_svg(const osm_api_data_types::osm_object::t_osm_id & p_id,
                     const std::vector<std::pair<double,double> > & p_old_list,
                     const std::vector<std::pair<double,double> > & p_new_list);
-    double moindre_carres(const std::vector<std::pair<double,double> > & p_list, double & p_max_alignment_square);
+    //TO DELETE    double moindre_carres(const std::vector<std::pair<double,double> > & p_list, double & p_max_alignment_square);
+    void create_gpx(const std::string & p_file_name,
+                    const std::vector<std::pair<double,double> > & p_points);
     
     std::ofstream & m_report;
     const osm_api_data_types::osm_object::t_osm_id m_id;
@@ -63,6 +65,7 @@ namespace osm_diff_analyzer_node_alignment
     const osm_api_data_types::osm_object::t_osm_id m_user_id;
     std::map<osm_api_data_types::osm_object::t_osm_id,way*> m_ways;
     std::map<osm_api_data_types::osm_object::t_osm_id,node*> m_nodes;
+    std::set<osm_api_data_types::osm_object::t_osm_id> m_nodes_to_check;
     std::set<osm_api_data_types::osm_object::t_osm_id> m_checked_ways;
 
     static node_alignment_analyzer_common_api * m_api; 

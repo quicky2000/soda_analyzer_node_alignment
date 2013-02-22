@@ -51,7 +51,9 @@ namespace osm_diff_analyzer_node_alignment
     const std::string & get_output_type(void)const;
     const std::string & get_type(void)const;
     // End of inherited methods
+    void create_report(void);
   private:
+    void analyze_current_changesets(void);
     template <class T>
       void generic_analyze(const osm_api_data_types::osm_core_element * const p_object);
 
@@ -89,7 +91,7 @@ namespace osm_diff_analyzer_node_alignment
     if(l_changeset_iter == m_changesets.end())
       {
         std::cout << "Create changeset " << l_changeset_id << std::endl ;
-        l_changeset_iter = m_changesets.insert(std::map<osm_api_data_types::osm_object::t_osm_id,changeset *>::value_type(l_changeset_id,new changeset(m_report,l_changeset_id,l_user_name,l_user_id))).first;
+        l_changeset_iter = m_changesets.insert(std::map<osm_api_data_types::osm_object::t_osm_id,changeset *>::value_type(l_changeset_id,new changeset(m_report,*this,l_changeset_id,l_user_name,l_user_id))).first;
       }
     l_changeset_iter->second->add(*l_casted_object);
   }

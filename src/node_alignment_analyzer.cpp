@@ -73,6 +73,11 @@ namespace osm_diff_analyzer_node_alignment
 
     changeset::set_api(m_api);
 
+  }
+
+  //------------------------------------------------------------------------------
+  void node_alignment_analyzer::create_report(void)
+  {
     std::string l_report_file_name = this->get_name()+"_node_alignment_report";
     std::string l_complete_report_file_name = l_report_file_name + ".html";
     std::ifstream l_test_file;
@@ -106,8 +111,6 @@ namespace osm_diff_analyzer_node_alignment
 
     m_report << "<script src=\"http://openlayers.org/api/OpenLayers.js\"></script>" << std::endl ;
     m_report << "<script type=\"text/javascript\">" << std::endl ;
-    //    m_report << "var lat=34.070;" << std::endl ;
-    //    m_report << "var lon=-118.73;" << std::endl ;
     m_report << "var zoom=15;" << std::endl ;
     m_report << "var map;" << std::endl ;
     m_report << std::endl ;
@@ -169,6 +172,7 @@ namespace osm_diff_analyzer_node_alignment
   //------------------------------------------------------------------------------
   node_alignment_analyzer::~node_alignment_analyzer(void)
   {
+    analyze_current_changesets();
 
     for(std::map<osm_api_data_types::osm_object::t_osm_id,changeset *>::iterator l_iter = m_changesets.begin();
         l_iter != m_changesets.end();
@@ -186,10 +190,15 @@ namespace osm_diff_analyzer_node_alignment
   //------------------------------------------------------------------------------
   void node_alignment_analyzer::init(const osm_diff_analyzer_if::osm_diff_state * p_diff_state)
   {
-    std::vector<osm_api_data_types::osm_object::t_osm_id> l_closed_changesets;
 
     std::cout << get_name() << " : Starting analyze of diff " << p_diff_state->get_sequence_number() << std::endl ;
-
+    analyze_current_changesets();
+  }
+    
+  //------------------------------------------------------------------------------
+  void node_alignment_analyzer::analyze_current_changesets(void)
+  {
+    std::vector<osm_api_data_types::osm_object::t_osm_id> l_closed_changesets;
     // List closed changesets : IE changesets not mentionned in previous minute diffs
     for(std::map<osm_api_data_types::osm_object::t_osm_id,changeset *>::const_iterator l_iter = m_changesets.begin();
         l_iter != m_changesets.end();

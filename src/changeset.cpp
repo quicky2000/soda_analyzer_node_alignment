@@ -24,6 +24,7 @@
 #include "osm_way.h"
 #include "svg_report.h"
 #include "linear_regression.h"
+#include "node_alignment_analyzer.h"
 #include <sstream>
 #include <limits>
 #include <cmath>
@@ -212,10 +213,6 @@ namespace osm_diff_analyzer_node_alignment
                 linear_regression l_regress_new;
                 double l_new_result = l_regress_new.compute(l_new_coordinates2);
 
-                //TO DELETE                double l_old_max_diff_square ;
-                //TO DELETE                double l_old_result = moindre_carres(l_old_coordinates2,l_old_max_diff_square);
-                //TO DELETE                double l_new_max_diff_square ;
-                //TO DELETE                double l_new_result = moindre_carres(l_new_coordinates2,l_new_max_diff_square);
                 double l_alignment_modification_rate = ( l_new_result ? l_old_result / l_new_result : std::numeric_limits<double>::max());
                 double l_old_max_diff_square = l_regress_old.get_max_alignment_square();
                 double l_new_max_diff_square = l_regress_new.get_max_alignment_square();
@@ -242,16 +239,17 @@ namespace osm_diff_analyzer_node_alignment
                     m_api->get_object_browse_url(l_changeset_url,"changeset",m_id);
                     std::string l_user_url;
                     m_api->get_user_browse_url(l_user_url,m_user_id,m_user_name);
+                    if(!m_report.is_open())
+                      {
+                        m_analyzer.create_report();
+                      }
                     m_report << "<A HREF=\"" << l_object_url << "\">Way " << l_way_id_stream.str() << "</A> has been aligned by <A HREF=\"" << l_user_url << "\">" << m_user_name << "</A> in <A HREF=\"" << l_changeset_url << "\">Changeset " << l_id_stream.str() << "</A><BR>" << std::endl ;
                     m_report << "With <B>alignment modification rate = " << l_alignment_modification_rate << "</B> and <B>Min square modification rate = " << l_min_square_modification_rate << "</B><BR>"  << std::endl ;
-                    //                    m_report << "<TABLE><TR><TD>" << std::endl ;
                     m_report << "<IMG SRC=\"./way_" << l_way_id_stream.str() << ".svg\" ALT=\"Way_" << l_way_id_stream.str() << ".svg\" TITLE=\"Way " << l_way_id_stream.str() << "\" ALIGN=\"MIDDLE\" /><BR>" << std::endl ;
-                    //                    m_report << "</TD><TD>" << std::endl ;
                     std::string l_map_name = "map_"+l_way_id_stream.str()+"_c"+l_id_stream.str();
                     m_report << "<button type=\"button\" onclick=\"init('" << l_map_name << "','" << l_old_gpx << ".gpx','" << l_new_gpx << ".gpx'," << l_regress_new.get_average_x() << "," << l_regress_new.get_average_y() << ")\">Display Map</button>" << std::endl;
                     m_report << "<div id=\"" << l_map_name << "\" class=\"smallmap\">" <<std::endl ;
                     m_report << "</div>" << std::endl ;
-                    //                    m_report << "</TD></TR></TABLE>" ;
                     m_report << "<HR/>" << std::endl ;
                   for(std::vector<node*>::iterator l_iter = l_modified_nodes.begin();
                         l_iter != l_modified_nodes.end();
@@ -292,9 +290,9 @@ namespace osm_diff_analyzer_node_alignment
         l_gpx_file << "<trkpt lat=\""<< std::setprecision(15) << l_iter->first << "\" lon=\"" << l_iter->second << "\">" << std::endl ;
         l_gpx_file << "</trkpt>" << std::endl ;
      }
-l_gpx_file << "</trkseg>" << std::endl ;
-l_gpx_file << "</trk>" << std::endl ;
-l_gpx_file << "</gpx>" << std::endl ;
+    l_gpx_file << "</trkseg>" << std::endl ;
+    l_gpx_file << "</trk>" << std::endl ;
+    l_gpx_file << "</gpx>" << std::endl ;
     l_gpx_file.close();
   }
 
@@ -317,70 +315,6 @@ l_gpx_file << "</gpx>" << std::endl ;
     l_svg_report.close();
 
   }
-
-  //TO DELETE  double changeset::moindre_carres(const std::vector<std::pair<double,double> > & p_list, double & p_max_alignment_square)
-  //TO DELETE  {
-  //TO DELETE    p_max_alignment_square = 0;
-  //TO DELETE    double l_sum = 0;
-  //TO DELETE    double l_average_x = 0;
-  //TO DELETE    double l_average_y = 0;
-  //TO DELETE    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
-  //TO DELETE        l_iter != p_list.end();
-  //TO DELETE        ++l_iter)
-  //TO DELETE      {
-  //TO DELETE        l_average_x += l_iter->first;
-  //TO DELETE        l_average_y += l_iter->second;
-  //TO DELETE      }
-  //TO DELETE    l_average_x = l_average_x / p_list.size(); 
-  //TO DELETE    l_average_y = l_average_y / p_list.size(); 
-  //TO DELETE  
-  //TO DELETE    // a computation
-  //TO DELETE    double l_a = 0;
-  //TO DELETE    double l_num = 0;
-  //TO DELETE    double l_den = 0;
-  //TO DELETE    for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
-  //TO DELETE        l_iter != p_list.end();
-  //TO DELETE        ++l_iter)
-  //TO DELETE      {
-  //TO DELETE        l_num += (l_iter->first - l_average_x) * (l_iter->second - l_average_x);
-  //TO DELETE        l_den += (l_iter->first - l_average_x) * (l_iter->first - l_average_x);
-  //TO DELETE      }  
-  //TO DELETE    if(l_den)
-  //TO DELETE      {
-  //TO DELETE        l_a = l_num / l_den;
-  //TO DELETE        double l_b = l_average_y - l_a * l_average_x;
-  //TO DELETE        for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
-  //TO DELETE            l_iter != p_list.end();
-  //TO DELETE            ++l_iter)
-  //TO DELETE          {
-  //TO DELETE            double l_diff = (l_iter->second - l_a * l_iter->first - l_b);
-  //TO DELETE            double l_diff_square = l_diff * l_diff;
-  //TO DELETE            if(p_max_alignment_square < l_diff_square)
-  //TO DELETE              {
-  //TO DELETE                p_max_alignment_square = l_diff_square;
-  //TO DELETE              }
-  //TO DELETE            l_sum += l_diff_square; 
-  //TO DELETE          }      
-  //TO DELETE      }
-  //TO DELETE    else
-  //TO DELETE      {
-  //TO DELETE	l_a = l_den / l_num;
-  //TO DELETE	double l_b = l_average_x - l_a * l_average_y;
-  //TO DELETE	for(std::vector<std::pair<double,double> >::const_iterator l_iter = p_list.begin();
-  //TO DELETE	    l_iter != p_list.end();
-  //TO DELETE	    ++l_iter)
-  //TO DELETE	  {
-  //TO DELETE	    double l_diff = (l_iter->first - l_a * l_iter->second - l_b);
-  //TO DELETE	    double l_diff_square = l_diff * l_diff;
-  //TO DELETE            if(p_max_alignment_square < l_diff_square)
-  //TO DELETE              {
-  //TO DELETE                p_max_alignment_square = l_diff_square;
-  //TO DELETE              }
-  //TO DELETE            l_sum += l_diff_square;
-  //TO DELETE	  }      
-  //TO DELETE      }
-  //TO DELETE    return l_sum;
-  //TO DELETE  }
 
 
   float changeset::m_modif_rate_min_level = 0.9;

@@ -31,11 +31,12 @@ namespace osm_diff_analyzer_node_alignment
 {
   class node;
   class way;
-
+  class node_alignment_analyzer;
   class changeset
   {
   public:
     inline changeset(std::ofstream & p_report,
+                     node_alignment_analyzer & p_analyzer,
                      const osm_api_data_types::osm_object::t_osm_id & p_id,
 		     const std::string & p_user_name,
 		     const osm_api_data_types::osm_object::t_osm_id & p_user_id);
@@ -60,6 +61,7 @@ namespace osm_diff_analyzer_node_alignment
                     const std::vector<std::pair<double,double> > & p_points);
     
     std::ofstream & m_report;
+    node_alignment_analyzer & m_analyzer;
     const osm_api_data_types::osm_object::t_osm_id m_id;
     const std::string m_user_name;
     const osm_api_data_types::osm_object::t_osm_id m_user_id;
@@ -76,10 +78,12 @@ namespace osm_diff_analyzer_node_alignment
   };
   //----------------------------------------------------------------------------
   changeset::changeset(std::ofstream & p_report,
+                       node_alignment_analyzer & p_analyzer,
                        const osm_api_data_types::osm_object::t_osm_id & p_id,
                        const std::string & p_user_name,
                        const osm_api_data_types::osm_object::t_osm_id & p_user_id):
     m_report(p_report),
+    m_analyzer(p_analyzer),
     m_id(p_id),
     m_user_name(p_user_name),
     m_user_id(p_user_id)

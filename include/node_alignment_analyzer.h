@@ -22,7 +22,7 @@
 
 #include "cpp_analyzer_base.h"
 #include "node_alignment_analyzer_description.h"
-#include "node_alignment_analyzer_common_api.h"
+#include "node_alignment_common_api.h"
 #include "module_configuration.h"
 #include "changeset.h"
 
@@ -42,7 +42,7 @@ namespace osm_diff_analyzer_node_alignment
   {
   public:
     node_alignment_analyzer(const osm_diff_analyzer_if::module_configuration * p_conf,
-                            node_alignment_analyzer_common_api & p_api);
+                            node_alignment_common_api & p_api);
     ~node_alignment_analyzer(void);
     // Methods inherited from cpp_analyzer_if
     void init(const osm_diff_analyzer_if::osm_diff_state * p_diff_state);
@@ -57,7 +57,7 @@ namespace osm_diff_analyzer_node_alignment
     template <class T>
       void generic_analyze(const osm_api_data_types::osm_core_element * const p_object);
 
-    node_alignment_analyzer_common_api & m_api;
+    node_alignment_common_api & m_api;
     std::ofstream m_report;
     std::map<osm_api_data_types::osm_object::t_osm_id,changeset *> m_changesets;
     std::set<osm_api_data_types::osm_object::t_osm_id> m_encountered_changesets;

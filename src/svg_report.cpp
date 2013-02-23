@@ -19,8 +19,10 @@
 */
 
 #include "svg_report.h"
+#include "quicky_exception.h"
 #include <limits>
 #include <iostream>
+#include <sstream>
 
 namespace osm_diff_analyzer_node_alignment
 {
@@ -81,7 +83,9 @@ namespace osm_diff_analyzer_node_alignment
     m_svg_file.open(p_file_name.c_str());
     if(!m_svg_file.is_open())
       {
-        std::cout << "Error when creating SVG file \"" << p_file_name << "\"" << std::endl ;
+	std::stringstream l_stream;
+        l_stream << "Error when creating SVG file \"" << p_file_name << "\"" ;
+	throw quicky_exception::quicky_runtime_exception(l_stream.str(),__LINE__,__FILE__);
       }
     m_svg_file << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << std::endl ;
     m_svg_file << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"" << m_width << "\" height=\"" << m_height << "\">" << std::endl ;

@@ -21,7 +21,7 @@
 #define _CHANGESET_H_
 
 #include "osm_api_data_types.h"
-#include "node_alignment_analyzer_common_api.h"
+#include "node_alignment_common_api.h"
 #include <string>
 #include <fstream>
 #include <set>
@@ -45,7 +45,7 @@ namespace osm_diff_analyzer_node_alignment
     void add(const osm_api_data_types::osm_node & p_node);
     void search_aligned_ways(std::ofstream & p_stream);
     bool check_way(const osm_api_data_types::osm_object::t_osm_id & p_id,const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_node_refs);
-    inline static void set_api(node_alignment_analyzer_common_api & p_api);
+    inline static void set_api(node_alignment_common_api & p_api);
     inline static void set_modif_rate_min_level(const float & p_rate);
     inline static void set_min_alignment_modification_rate(const float & p_rate);
     inline static void set_min_way_node_nb(const float & p_rate);
@@ -56,7 +56,6 @@ namespace osm_diff_analyzer_node_alignment
     void create_svg(const osm_api_data_types::osm_object::t_osm_id & p_id,
                     const std::vector<std::pair<double,double> > & p_old_list,
                     const std::vector<std::pair<double,double> > & p_new_list);
-    //TO DELETE    double moindre_carres(const std::vector<std::pair<double,double> > & p_list, double & p_max_alignment_square);
     void create_gpx(const std::string & p_file_name,
                     const std::vector<std::pair<double,double> > & p_points);
     
@@ -70,7 +69,7 @@ namespace osm_diff_analyzer_node_alignment
     std::set<osm_api_data_types::osm_object::t_osm_id> m_nodes_to_check;
     std::set<osm_api_data_types::osm_object::t_osm_id> m_checked_ways;
 
-    static node_alignment_analyzer_common_api * m_api; 
+    static node_alignment_common_api * m_api; 
 
     static float m_modif_rate_min_level;
     static float m_min_alignment_modification_rate;
@@ -91,7 +90,7 @@ namespace osm_diff_analyzer_node_alignment
       }
 
    //----------------------------------------------------------------------------
-    void changeset::set_api(node_alignment_analyzer_common_api & p_api)
+    void changeset::set_api(node_alignment_common_api & p_api)
     {
       m_api = & p_api;
     }

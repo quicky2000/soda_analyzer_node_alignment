@@ -24,10 +24,10 @@
 
 namespace osm_diff_analyzer_node_alignment
 {
-  class node_alignment_analyzer_common_api
+  class node_alignment_common_api
   {
   public:
-    inline node_alignment_analyzer_common_api(osm_diff_analyzer_if::module_library_if::t_register_function p_func);
+    inline node_alignment_common_api(osm_diff_analyzer_if::module_library_if::t_register_function p_func);
     inline void get_user_subscription_date(const osm_api_data_types::osm_object::t_osm_id & p_id,
                                            const std::string & p_name,
                                            std::string & p_date,
@@ -44,7 +44,7 @@ namespace osm_diff_analyzer_node_alignment
                                                                                  void * p_user_data = NULL);
 
     inline const std::vector<osm_api_data_types::osm_relation*> * const get_node_relations(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                 void * p_user_data = NULL);
+											   void * p_user_data = NULL);
 
     inline const std::vector<osm_api_data_types::osm_node*> * const get_nodes(const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_ids,
 									      void * p_user_data=NULL);
@@ -55,30 +55,30 @@ namespace osm_diff_analyzer_node_alignment
 							       void * p_user_data=NULL);
 
     inline const std::vector<osm_api_data_types::osm_way*> * const get_way_history(const osm_api_data_types::osm_object::t_osm_id & p_id,
-										     void * p_user_data = NULL);
+										   void * p_user_data = NULL);
 
     inline const std::vector<osm_api_data_types::osm_relation*> * const get_way_relations(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                 void * p_user_data = NULL);
+											  void * p_user_data = NULL);
 
     inline const osm_api_data_types::osm_way * const get_way_full(const osm_api_data_types::osm_object::t_osm_id & p_id,
                                                                   std::vector<osm_api_data_types::osm_node*> & p_nodes,
                                                                   void * p_user_data=NULL);
 
     inline const std::vector<osm_api_data_types::osm_way*> * const get_ways(const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_ids,
-									      void * p_user_data=NULL);
+									    void * p_user_data=NULL);
 
     inline const osm_api_data_types::osm_relation * get_relation(const osm_api_data_types::osm_object::t_osm_id & p_id,
-						       void * p_user_data=NULL);
+								 void * p_user_data=NULL);
 
     inline const osm_api_data_types::osm_relation * get_relation_version(const osm_api_data_types::osm_object::t_osm_id & p_id,
-							       const osm_api_data_types::osm_core_element::t_osm_version & p_version=0,
-							       void * p_user_data=NULL);
+									 const osm_api_data_types::osm_core_element::t_osm_version & p_version=0,
+									 void * p_user_data=NULL);
 
     inline const std::vector<osm_api_data_types::osm_relation*> * const get_relation_history(const osm_api_data_types::osm_object::t_osm_id & p_id,
-										     void * p_user_data = NULL);
+											     void * p_user_data = NULL);
 
     inline const std::vector<osm_api_data_types::osm_relation*> * const get_relation_relations(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                 void * p_user_data = NULL);
+											       void * p_user_data = NULL);
 
     inline const osm_api_data_types::osm_relation * const get_relation_full(const osm_api_data_types::osm_object::t_osm_id & p_id,
                                                                             std::vector<osm_api_data_types::osm_node*> & p_nodes,
@@ -86,7 +86,7 @@ namespace osm_diff_analyzer_node_alignment
                                                                             void * p_user_data = NULL);
 
     inline const std::vector<osm_api_data_types::osm_relation*> * const get_relations(const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_ids,
-									      void * p_user_data=NULL);
+										      void * p_user_data=NULL);
 
     inline const osm_api_data_types::osm_changeset * get_changeset(const osm_api_data_types::osm_object::t_osm_id & p_id,
                                                                    void * p_user_data=NULL);
@@ -95,13 +95,13 @@ namespace osm_diff_analyzer_node_alignment
                                                                                             void * p_user_data = NULL);
 
     inline const std::vector<osm_api_data_types::osm_changeset* > * const get_changesets(const osm_api_data_types::osm_bounding_box & p_bounding_box,
-                                                                                                const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                                const std::string & p_user_name,
-                                                                                                const std::string & p_time1,
-                                                                                                const std::string & p_time2,
-                                                                                                bool p_open,
-                                                                                                bool p_close,
-                                                                                                void * p_user_data=NULL);
+											 const osm_api_data_types::osm_object::t_osm_id & p_id,
+											 const std::string & p_user_name,
+											 const std::string & p_time1,
+											 const std::string & p_time2,
+											 bool p_open,
+											 bool p_close,
+											 void * p_user_data=NULL);
     inline void get_map(const osm_api_data_types::osm_bounding_box & p_bounding_box,
                         std::vector<osm_api_data_types::osm_node*> & p_nodes,
                         std::vector<osm_api_data_types::osm_way*> & p_ways,
@@ -130,7 +130,13 @@ namespace osm_diff_analyzer_node_alignment
                                    const std::string & p_type,
                                    const osm_api_data_types::osm_object::t_osm_id & p_id,
                                    const osm_api_data_types::osm_core_element::t_osm_version & p_version);
-  
+    inline void ui_register_module(const osm_diff_analyzer_if::analyzer_base & p_module,
+				   const std::string & p_text);
+    inline void ui_append_log_text(const osm_diff_analyzer_if::analyzer_base & p_module,
+				   const std::string & p_text);
+    inline void ui_declare_html_report(const osm_diff_analyzer_if::analyzer_base & p_module,
+				       const std::string & p_name);
+
 
   private:
     osm_diff_analyzer_if::common_api_if::t_get_user_subscription_date m_get_user_subscription_date;
@@ -165,10 +171,13 @@ namespace osm_diff_analyzer_node_alignment
     osm_diff_analyzer_if::common_api_if::t_get_user_browse_url m_get_user_browse_url;
     osm_diff_analyzer_if::common_api_if::t_get_object_browse_url m_get_object_browse_url;
     osm_diff_analyzer_if::common_api_if::t_get_api_object_url m_get_api_object_url;
+    osm_diff_analyzer_if::common_api_if::t_ui_register_module m_ui_register_module;
+    osm_diff_analyzer_if::common_api_if::t_ui_append_log_text m_ui_append_log_text;
+    osm_diff_analyzer_if::common_api_if::t_ui_declare_html_report m_ui_declare_html_report;
   };
 
   //---------------------------------------------------------------------------- 
-  node_alignment_analyzer_common_api::node_alignment_analyzer_common_api(osm_diff_analyzer_if::module_library_if::t_register_function p_func) 
+  node_alignment_common_api::node_alignment_common_api(osm_diff_analyzer_if::module_library_if::t_register_function p_func) 
     {
       uintptr_t l_api_ptr[COMMON_API_IF_SIZE];
       for(uint32_t l_index = 0 ;l_index < COMMON_API_IF_SIZE ; ++l_index)
@@ -209,124 +218,127 @@ namespace osm_diff_analyzer_node_alignment
       m_get_user_browse_url = (osm_diff_analyzer_if::common_api_if::t_get_user_browse_url)l_api_ptr[osm_diff_analyzer_if::common_api_if::GET_USER_BROWSE_URL]; 
       m_get_object_browse_url = (osm_diff_analyzer_if::common_api_if::t_get_object_browse_url)l_api_ptr[osm_diff_analyzer_if::common_api_if::GET_OBJECT_BROWSE_URL]; 
       m_get_api_object_url = (osm_diff_analyzer_if::common_api_if::t_get_api_object_url)l_api_ptr[osm_diff_analyzer_if::common_api_if::GET_API_OBJECT_URL]; 
+      m_ui_register_module = (osm_diff_analyzer_if::common_api_if::t_ui_register_module)l_api_ptr[osm_diff_analyzer_if::common_api_if::UI_REGISTER_MODULE];
+      m_ui_append_log_text = (osm_diff_analyzer_if::common_api_if::t_ui_append_log_text)l_api_ptr[osm_diff_analyzer_if::common_api_if::UI_APPEND_LOG_TEXT];
+      m_ui_declare_html_report = (osm_diff_analyzer_if::common_api_if::t_ui_declare_html_report)l_api_ptr[osm_diff_analyzer_if::common_api_if::UI_DECLARE_HTML_REPORT];
     }
 
   //----------------------------------------------------------------------------
-  void node_alignment_analyzer_common_api::get_user_subscription_date(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                          const std::string & p_name,
-                                                          std::string & p_date,
-                                                          void * p_user_data)
+  void node_alignment_common_api::get_user_subscription_date(const osm_api_data_types::osm_object::t_osm_id & p_id,
+							 const std::string & p_name,
+							 std::string & p_date,
+							 void * p_user_data)
   {
     m_get_user_subscription_date(p_id,p_name,p_date,p_user_data);
   }
   //----------------------------------------------------------------------------
-  const osm_api_data_types::osm_node * node_alignment_analyzer_common_api::get_node(const osm_api_data_types::osm_object::t_osm_id & p_id,
-							    void * p_user_data)
+  const osm_api_data_types::osm_node * node_alignment_common_api::get_node(const osm_api_data_types::osm_object::t_osm_id & p_id,
+								       void * p_user_data)
     {
       return m_get_node(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const osm_api_data_types::osm_node * node_alignment_analyzer_common_api::get_node_version(const osm_api_data_types::osm_object::t_osm_id & p_id,
-								    const osm_api_data_types::osm_core_element::t_osm_version & p_version,
-								    void * p_user_data)
+  const osm_api_data_types::osm_node * node_alignment_common_api::get_node_version(const osm_api_data_types::osm_object::t_osm_id & p_id,
+									       const osm_api_data_types::osm_core_element::t_osm_version & p_version,
+									       void * p_user_data)
     {
       return m_get_node_version(p_id,p_version,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_node*> * const node_alignment_analyzer_common_api::get_node_history(const osm_api_data_types::osm_object::t_osm_id & p_id,
-											void * p_user_data)
+  const std::vector<osm_api_data_types::osm_node*> * const node_alignment_common_api::get_node_history(const osm_api_data_types::osm_object::t_osm_id & p_id,
+												   void * p_user_data)
     {
       return m_get_node_history(p_id,p_user_data);
     }
   
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_way*> * const node_alignment_analyzer_common_api::get_node_ways(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                    void * p_user_data)
+  const std::vector<osm_api_data_types::osm_way*> * const node_alignment_common_api::get_node_ways(const osm_api_data_types::osm_object::t_osm_id & p_id,
+											       void * p_user_data)
     {
       return m_get_node_ways(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_analyzer_common_api::get_node_relations(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                    void * p_user_data)
+  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_common_api::get_node_relations(const osm_api_data_types::osm_object::t_osm_id & p_id,
+													 void * p_user_data)
     {
       return m_get_node_relations(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_node*> * const node_alignment_analyzer_common_api::get_nodes(const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_ids,
-								     void * p_user_data)
+  const std::vector<osm_api_data_types::osm_node*> * const node_alignment_common_api::get_nodes(const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_ids,
+											    void * p_user_data)
     {
       return m_get_nodes(p_ids,p_user_data);
     }
 
   //----------------------------------------------------------------------------
-  const osm_api_data_types::osm_way * node_alignment_analyzer_common_api::get_way(const osm_api_data_types::osm_object::t_osm_id & p_id,
-							  void * p_user_data)
+  const osm_api_data_types::osm_way * node_alignment_common_api::get_way(const osm_api_data_types::osm_object::t_osm_id & p_id,
+								     void * p_user_data)
     {
       return m_get_way(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const osm_api_data_types::osm_way * node_alignment_analyzer_common_api::get_way_version(const osm_api_data_types::osm_object::t_osm_id & p_id,
-								  const osm_api_data_types::osm_core_element::t_osm_version & p_version,
-								  void * p_user_data)
+  const osm_api_data_types::osm_way * node_alignment_common_api::get_way_version(const osm_api_data_types::osm_object::t_osm_id & p_id,
+									     const osm_api_data_types::osm_core_element::t_osm_version & p_version,
+									     void * p_user_data)
     {
       return m_get_way_version(p_id,p_version,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_way*> * const node_alignment_analyzer_common_api::get_way_history(const osm_api_data_types::osm_object::t_osm_id & p_id,
-											void * p_user_data)
+  const std::vector<osm_api_data_types::osm_way*> * const node_alignment_common_api::get_way_history(const osm_api_data_types::osm_object::t_osm_id & p_id,
+												 void * p_user_data)
     {
       return m_get_way_history(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_analyzer_common_api::get_way_relations(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                    void * p_user_data)
+  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_common_api::get_way_relations(const osm_api_data_types::osm_object::t_osm_id & p_id,
+													void * p_user_data)
     {
       return m_get_way_relations(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const osm_api_data_types::osm_way * const node_alignment_analyzer_common_api::get_way_full(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                  std::vector<osm_api_data_types::osm_node*> & p_nodes,
-                                                                  void * p_user_data)
+  const osm_api_data_types::osm_way * const node_alignment_common_api::get_way_full(const osm_api_data_types::osm_object::t_osm_id & p_id,
+										std::vector<osm_api_data_types::osm_node*> & p_nodes,
+										void * p_user_data)
     {
       return m_get_way_full(p_id,p_nodes,p_user_data);
     }
 
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_way*> * const node_alignment_analyzer_common_api::get_ways(const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_ids,
-								     void * p_user_data)
+  const std::vector<osm_api_data_types::osm_way*> * const node_alignment_common_api::get_ways(const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_ids,
+											  void * p_user_data)
     {
       return m_get_ways(p_ids,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const osm_api_data_types::osm_relation * node_alignment_analyzer_common_api::get_relation(const osm_api_data_types::osm_object::t_osm_id & p_id,
-								    void * p_user_data)
+  const osm_api_data_types::osm_relation * node_alignment_common_api::get_relation(const osm_api_data_types::osm_object::t_osm_id & p_id,
+									       void * p_user_data)
     {
       return m_get_relation(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const osm_api_data_types::osm_relation * node_alignment_analyzer_common_api::get_relation_version(const osm_api_data_types::osm_object::t_osm_id & p_id,
-									    const osm_api_data_types::osm_core_element::t_osm_version & p_version,
-									    void * p_user_data)
+  const osm_api_data_types::osm_relation * node_alignment_common_api::get_relation_version(const osm_api_data_types::osm_object::t_osm_id & p_id,
+										       const osm_api_data_types::osm_core_element::t_osm_version & p_version,
+										       void * p_user_data)
     {
       return m_get_relation_version(p_id,p_version,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_analyzer_common_api::get_relation_history(const osm_api_data_types::osm_object::t_osm_id & p_id,
-											void * p_user_data)
+  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_common_api::get_relation_history(const osm_api_data_types::osm_object::t_osm_id & p_id,
+													   void * p_user_data)
     {
       return m_get_relation_history(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_analyzer_common_api::get_relation_relations(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                    void * p_user_data)
+  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_common_api::get_relation_relations(const osm_api_data_types::osm_object::t_osm_id & p_id,
+													     void * p_user_data)
     {
       return m_get_relation_relations(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const osm_api_data_types::osm_relation * const node_alignment_analyzer_common_api::get_relation_full(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                            std::vector<osm_api_data_types::osm_node*> & p_nodes,
-                                                                            std::vector<osm_api_data_types::osm_way*> & p_ways,
-                                                                            void * p_user_data)
+  const osm_api_data_types::osm_relation * const node_alignment_common_api::get_relation_full(const osm_api_data_types::osm_object::t_osm_id & p_id,
+											  std::vector<osm_api_data_types::osm_node*> & p_nodes,
+											  std::vector<osm_api_data_types::osm_way*> & p_ways,
+											  void * p_user_data)
     {
       return m_get_relation_full(p_id,
                                  p_nodes,
@@ -334,81 +346,81 @@ namespace osm_diff_analyzer_node_alignment
                                  p_user_data);
     }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_analyzer_common_api::get_relations(const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_ids,
-								     void * p_user_data)
+  const std::vector<osm_api_data_types::osm_relation*> * const node_alignment_common_api::get_relations(const std::vector<osm_api_data_types::osm_object::t_osm_id> & p_ids,
+												    void * p_user_data)
     {
       return m_get_relations(p_ids,p_user_data);
     }
 
   //----------------------------------------------------------------------------
-  const osm_api_data_types::osm_changeset * node_alignment_analyzer_common_api::get_changeset(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                      void * p_user_data)
+  const osm_api_data_types::osm_changeset * node_alignment_common_api::get_changeset(const osm_api_data_types::osm_object::t_osm_id & p_id,
+										 void * p_user_data)
     {
       return m_get_changeset(p_id,p_user_data);
     }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_change*> * const node_alignment_analyzer_common_api::get_changeset_content(const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                               void * p_user_data)
+  const std::vector<osm_api_data_types::osm_change*> * const node_alignment_common_api::get_changeset_content(const osm_api_data_types::osm_object::t_osm_id & p_id,
+													  void * p_user_data)
     {
       return m_get_changeset_content(p_id,p_user_data);
     }
 
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_changeset* > * const node_alignment_analyzer_common_api::get_changesets(const osm_api_data_types::osm_bounding_box & p_bounding_box,
-                                                                                            const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                                                                            const std::string & p_user_name,
-                                                                                            const std::string & p_time1,
-                                                                                            const std::string & p_time2,
-                                                                                            bool p_open,
-                                                                                            bool p_close,
-                                                                                            void * p_user_data)
+  const std::vector<osm_api_data_types::osm_changeset* > * const node_alignment_common_api::get_changesets(const osm_api_data_types::osm_bounding_box & p_bounding_box,
+												       const osm_api_data_types::osm_object::t_osm_id & p_id,
+												       const std::string & p_user_name,
+												       const std::string & p_time1,
+												       const std::string & p_time2,
+												       bool p_open,
+												       bool p_close,
+												       void * p_user_data)
     {
       return m_get_changesets(p_bounding_box,p_id,p_user_name,p_time1,p_time2,p_open,p_close,p_user_data);
     }
   //----------------------------------------------------------------------------
-  void node_alignment_analyzer_common_api::get_map(const osm_api_data_types::osm_bounding_box & p_bounding_box,
-                           std::vector<osm_api_data_types::osm_node*> & p_nodes,
-                           std::vector<osm_api_data_types::osm_way*> & p_ways,
-                           std::vector<osm_api_data_types::osm_relation*> & p_relations,
-                           void *p_user_data)
+  void node_alignment_common_api::get_map(const osm_api_data_types::osm_bounding_box & p_bounding_box,
+				      std::vector<osm_api_data_types::osm_node*> & p_nodes,
+				      std::vector<osm_api_data_types::osm_way*> & p_ways,
+				      std::vector<osm_api_data_types::osm_relation*> & p_relations,
+				      void *p_user_data)
   {
     return m_get_map(p_bounding_box,p_nodes,p_ways,p_relations,p_user_data);
   }
 
   //----------------------------------------------------------------------------
-  void node_alignment_analyzer_common_api::cache(const osm_api_data_types::osm_node & p_node)
+  void node_alignment_common_api::cache(const osm_api_data_types::osm_node & p_node)
   {
     return m_cache_node(p_node);
   }
 
   //----------------------------------------------------------------------------
-  void node_alignment_analyzer_common_api::cache(const osm_api_data_types::osm_way & p_way)
+  void node_alignment_common_api::cache(const osm_api_data_types::osm_way & p_way)
   {
     return m_cache_way(p_way);
   }
   //----------------------------------------------------------------------------
-  void node_alignment_analyzer_common_api::cache(const osm_api_data_types::osm_relation & p_relation)
+  void node_alignment_common_api::cache(const osm_api_data_types::osm_relation & p_relation)
   {
     return m_cache_relation(p_relation);
   }
   //----------------------------------------------------------------------------
-  void node_alignment_analyzer_common_api::cache(const osm_api_data_types::osm_object::t_osm_id & p_id,
-				     const std::string & p_user_name,
-				     const osm_api_data_types::osm_object::t_osm_id & p_latest_changeset,
-				     const std::string & p_date)
+  void node_alignment_common_api::cache(const osm_api_data_types::osm_object::t_osm_id & p_id,
+				    const std::string & p_user_name,
+				    const osm_api_data_types::osm_object::t_osm_id & p_latest_changeset,
+				    const std::string & p_date)
   {
     m_cache_user(p_id,p_user_name,p_latest_changeset,p_date);
   }
   //----------------------------------------------------------------------------
-  const std::vector<osm_api_data_types::osm_change*> * const node_alignment_analyzer_common_api::get_osm_change_file_content(const std::string & p_file_name)
+  const std::vector<osm_api_data_types::osm_change*> * const node_alignment_common_api::get_osm_change_file_content(const std::string & p_file_name)
     {
       return m_get_osm_change_file_content(p_file_name);
     }
   //----------------------------------------------------------------------------
-  void node_alignment_analyzer_common_api::get_osm_file_content(const std::string & p_file_name,
-						    std::vector<osm_api_data_types::osm_node*> & p_nodes,
-						    std::vector<osm_api_data_types::osm_way*> & p_ways,
-						    std::vector<osm_api_data_types::osm_relation*> & p_relations)
+  void node_alignment_common_api::get_osm_file_content(const std::string & p_file_name,
+						   std::vector<osm_api_data_types::osm_node*> & p_nodes,
+						   std::vector<osm_api_data_types::osm_way*> & p_ways,
+						   std::vector<osm_api_data_types::osm_relation*> & p_relations)
   {
     m_get_osm_file_content(p_file_name,
 			   p_nodes,
@@ -416,31 +428,52 @@ namespace osm_diff_analyzer_node_alignment
 			   p_relations);
   }
   //----------------------------------------------------------------------------
-  void node_alignment_analyzer_common_api::get_user_browse_url(std::string & p_result,
-                                    const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                    const std::string & p_user_name)
+  void node_alignment_common_api::get_user_browse_url(std::string & p_result,
+						  const osm_api_data_types::osm_object::t_osm_id & p_id,
+						  const std::string & p_user_name)
   {
     m_get_user_browse_url(p_result,p_id,p_user_name);
   }
 
   //----------------------------------------------------------------------------
-   void node_alignment_analyzer_common_api::get_object_browse_url(std::string & p_result,
-                                      const std::string & p_type,
-                                      const osm_api_data_types::osm_object::t_osm_id & p_id)
-   {
-     m_get_object_browse_url(p_result,p_type,p_id);
-   }
+  void node_alignment_common_api::get_object_browse_url(std::string & p_result,
+						    const std::string & p_type,
+						    const osm_api_data_types::osm_object::t_osm_id & p_id)
+  {
+    m_get_object_browse_url(p_result,p_type,p_id);
+  }
 
   //----------------------------------------------------------------------------
-   void node_alignment_analyzer_common_api::get_api_object_url(std::string & p_result,
-                                   const std::string & p_type,
-                                   const osm_api_data_types::osm_object::t_osm_id & p_id,
-                                   const osm_api_data_types::osm_core_element::t_osm_version & p_version)
-   {
-     m_get_api_object_url(p_result,p_type,p_id,p_version);
-   }
+  void node_alignment_common_api::get_api_object_url(std::string & p_result,
+						 const std::string & p_type,
+						 const osm_api_data_types::osm_object::t_osm_id & p_id,
+						 const osm_api_data_types::osm_core_element::t_osm_version & p_version)
+  {
+    m_get_api_object_url(p_result,p_type,p_id,p_version);
+  }
   
+  //----------------------------------------------------------------------------
+  void node_alignment_common_api::ui_register_module(const osm_diff_analyzer_if::analyzer_base & p_module,
+						 const std::string & p_name)
+  {
+    m_ui_register_module(p_module,p_name);
+  }
+
+  //----------------------------------------------------------------------------
+  void node_alignment_common_api::ui_append_log_text(const osm_diff_analyzer_if::analyzer_base & p_module,
+						 const std::string & p_text)
+  {
+    m_ui_append_log_text(p_module,p_text);
+  }
+
+  //----------------------------------------------------------------------------
+  void node_alignment_common_api::ui_declare_html_report(const osm_diff_analyzer_if::analyzer_base & p_module,
+						     const std::string & p_name)
+  {
+    m_ui_declare_html_report(p_module,p_name);
+  }
+
 
 }
-#endif // _NODE_ALIGNMENT_ANALYZER_COMMON_API_H_
+#endif // _NODE_ALIGNMENT_COMMON_API_H_
 //EOF

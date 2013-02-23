@@ -20,7 +20,7 @@
 #include "node_alignment_analyzer_wrapper.h"
 #include "node_alignment_analyzer_description.h"
 #include "node_alignment_analyzer.h"
-#include "node_alignment_analyzer_common_api.h"
+#include "node_alignment_common_api.h"
 
 #include <cassert>
 #include <iostream>
@@ -54,7 +54,7 @@ namespace osm_diff_analyzer_node_alignment
   //----------------------------------------------------------------------------
   void node_alignment_analyzer_wrapper::require_common_api(osm_diff_analyzer_if::module_library_if::t_register_function p_func)
   {
-    m_common_api = new node_alignment_analyzer_common_api(p_func);
+    m_common_api = new node_alignment_common_api(p_func);
   }
 
   //----------------------------------------------------------------------------
@@ -62,7 +62,7 @@ namespace osm_diff_analyzer_node_alignment
   {
     delete m_common_api;
   }
-  node_alignment_analyzer_common_api * node_alignment_analyzer_wrapper::m_common_api = NULL;
+  node_alignment_common_api * node_alignment_analyzer_wrapper::m_common_api = NULL;
 
   extern "C"
   {

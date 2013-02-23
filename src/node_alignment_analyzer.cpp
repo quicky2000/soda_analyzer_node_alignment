@@ -18,7 +18,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #include "node_alignment_analyzer.h"
-#include "node_alignment_analyzer_common_api.h"
+#include "node_alignment_common_api.h"
+#include "quicky_exception.h"
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -29,45 +30,65 @@ namespace osm_diff_analyzer_node_alignment
 {
   //------------------------------------------------------------------------------
   node_alignment_analyzer::node_alignment_analyzer(const osm_diff_analyzer_if::module_configuration * p_conf,
-                                                   node_alignment_analyzer_common_api & p_api):
+                                                   node_alignment_common_api & p_api):
     osm_diff_analyzer_cpp_if::cpp_analyzer_base("node_alignment_analyser",p_conf->get_name(),""),
     m_api(p_api),
     m_report()
   {
-    const std::map<std::string,std::string> & l_conf_parameters = p_conf->get_parameters();
+     // Register module to be able to use User Interface
+    m_api.ui_register_module(*this,get_name());
+
+   const std::map<std::string,std::string> & l_conf_parameters = p_conf->get_parameters();
 
     std::map<std::string,std::string>::const_iterator l_iter = l_conf_parameters.find("min_way_node_nb");
     if(l_iter == l_conf_parameters.end())
     {
-      std::cout << this->get_name() << " : Using default value for parameter \"min_way_node_nb\" : " << changeset::get_min_way_node_nb() << std::endl ;
+      {
+	std::stringstream l_stream;
+	l_stream << this->get_name() << " : Using default value for parameter \"min_way_node_nb\" : " << changeset::get_min_way_node_nb() ;
+	m_api.ui_append_log_text(*this,l_stream.str());
+      }
     }
     else
       {
 	float l_min_way_node_nb = strtof(l_iter->second.c_str(),NULL);
-	std::cout << this->get_name() << " : Using value " << l_min_way_node_nb << " for parameter \"min_way_node_nb\"" << std::endl ;
+
+	{
+	  std::stringstream l_stream;
+	  l_stream << this->get_name() << " : Using value " << l_min_way_node_nb << " for parameter \"min_way_node_nb\"" ;
+	  m_api.ui_append_log_text(*this,l_stream.str());
+	}
 	changeset::set_min_way_node_nb(l_min_way_node_nb);
       }
     l_iter = l_conf_parameters.find("modif_rate_min_level");
     if(l_iter == l_conf_parameters.end())
     {
-      std::cout << this->get_name() << " : Using default value for parameter \"modif_rate_min_level\" : " << changeset::get_modif_rate_min_level() << std::endl ;
+      std::stringstream l_stream;
+      l_stream << this->get_name() << " : Using default value for parameter \"modif_rate_min_level\" : " << changeset::get_modif_rate_min_level();
+      m_api.ui_append_log_text(*this,l_stream.str());
     }
     else
       {
 	float l_modif_rate_min_level = strtof(l_iter->second.c_str(),NULL);
-	std::cout << this->get_name() << " : Using value " << l_modif_rate_min_level << " for parameter \"modif_rate_min_level\"" << std::endl ;
+	std::stringstream l_stream;
+	l_stream << this->get_name() << " : Using value " << l_modif_rate_min_level << " for parameter \"modif_rate_min_level\"" ;
+	m_api.ui_append_log_text(*this,l_stream.str());
 	changeset::set_modif_rate_min_level(l_modif_rate_min_level);
       }
 
     l_iter = l_conf_parameters.find("min_alignment_modification_rate");
     if(l_iter == l_conf_parameters.end())
     {
-      std::cout << this->get_name() << " : Using default value for parameter \"min_alignment_modification_rate\" : " << changeset::get_min_alignment_modification_rate() << std::endl ;
+	std::stringstream l_stream;
+	l_stream << this->get_name() << " : Using default value for parameter \"min_alignment_modification_rate\" : " << changeset::get_min_alignment_modification_rate();
+	m_api.ui_append_log_text(*this,l_stream.str());	
     }
     else
       {
 	float l_min_alignment_modification_rate = strtof(l_iter->second.c_str(),NULL);
-	std::cout << this->get_name() << " : Using value " << l_min_alignment_modification_rate << " for parameter \"min_alignment_modification_rate\"" << std::endl ;
+	std::stringstream l_stream;
+	l_stream << this->get_name() << " : Using value " << l_min_alignment_modification_rate << " for parameter \"min_alignment_modification_rate\"" ;
+	m_api.ui_append_log_text(*this,l_stream.str());
 	changeset::set_min_alignment_modification_rate(l_min_alignment_modification_rate);
       }
 
@@ -102,8 +123,9 @@ namespace osm_diff_analyzer_node_alignment
     m_report.open(l_complete_report_file_name.c_str());
     if(m_report.fail())
       {
-	std::cout << "ERROR : unabled to open \"" << l_complete_report_file_name << "\"" << std::endl ;
-	exit(EXIT_FAILURE);
+	std::stringstream l_stream; 
+	l_stream << "ERROR : unabled to open \"" << l_complete_report_file_name << "\"" ;
+	throw quicky_exception::quicky_runtime_exception(l_stream.str(),__LINE__,__FILE__);
       }
     m_report << "<html>" << std::endl ;
     m_report << "\t<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" << std::endl ;
@@ -167,6 +189,8 @@ namespace osm_diff_analyzer_node_alignment
 
     m_report << "\t</head>" << std::endl ;
     m_report << "\t<body><H1>" << this->get_name() << " Node alignement Report</H1>" << std::endl ;
+
+    m_api.ui_declare_html_report(*this,l_complete_report_file_name);
   }
 
   //------------------------------------------------------------------------------
@@ -191,7 +215,9 @@ namespace osm_diff_analyzer_node_alignment
   void node_alignment_analyzer::init(const osm_diff_analyzer_if::osm_diff_state * p_diff_state)
   {
 
-    std::cout << get_name() << " : Starting analyze of diff " << p_diff_state->get_sequence_number() << std::endl ;
+    std::stringstream l_stream;
+    l_stream << "Starting analyze of diff " << p_diff_state->get_sequence_number() ;
+    m_api.ui_append_log_text(*this,l_stream.str());
     analyze_current_changesets();
   }
     
@@ -248,8 +274,11 @@ namespace osm_diff_analyzer_node_alignment
               case osm_api_data_types::osm_core_element::RELATION :
                 break;
               case osm_api_data_types::osm_core_element::INTERNAL_INVALID:
-                std::cout << "ERROR : unexpected core type value \"" << osm_api_data_types::osm_core_element::get_osm_type_str(l_element->get_core_type()) << "\"" << std::endl ;
-                exit(-1);
+		{
+		  std::stringstream l_stream;
+		  l_stream << "ERROR : unexpected core type value \"" << osm_api_data_types::osm_core_element::get_osm_type_str(l_element->get_core_type()) << "\"" ;
+		  throw quicky_exception::quicky_logic_exception(l_stream.str(),__LINE__,__FILE__);
+		}
                 break;
               }
           }

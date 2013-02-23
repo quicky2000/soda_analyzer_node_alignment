@@ -26,7 +26,7 @@
 
 namespace osm_diff_analyzer_node_alignment
 {
-  class node_alignment_analyzer_common_api;
+  class node_alignment_common_api;
 
   class node_alignment_analyzer_wrapper
   {
@@ -38,7 +38,7 @@ namespace osm_diff_analyzer_node_alignment
     static void require_common_api(osm_diff_analyzer_if::module_library_if::t_register_function);
     static void cleanup(void);
   private:
-    static node_alignment_analyzer_common_api *m_common_api;
+    static node_alignment_common_api *m_common_api;
   };
 
 }

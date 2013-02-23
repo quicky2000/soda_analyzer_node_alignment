@@ -25,6 +25,7 @@
 #include "svg_report.h"
 #include "linear_regression.h"
 #include "node_alignment_analyzer.h"
+#include "quicky_exception.h"
 #include <sstream>
 #include <limits>
 #include <cmath>
@@ -245,11 +246,11 @@ namespace osm_diff_analyzer_node_alignment
                       }
                     m_report << "<A HREF=\"" << l_object_url << "\">Way " << l_way_id_stream.str() << "</A> has been aligned by <A HREF=\"" << l_user_url << "\">" << m_user_name << "</A> in <A HREF=\"" << l_changeset_url << "\">Changeset " << l_id_stream.str() << "</A><BR>" << std::endl ;
                     m_report << "With <B>alignment modification rate = " << l_alignment_modification_rate << "</B> and <B>Min square modification rate = " << l_min_square_modification_rate << "</B><BR>"  << std::endl ;
-                    m_report << "<IMG SRC=\"./way_" << l_way_id_stream.str() << ".svg\" ALT=\"Way_" << l_way_id_stream.str() << ".svg\" TITLE=\"Way " << l_way_id_stream.str() << "\" ALIGN=\"MIDDLE\" /><BR>" << std::endl ;
                     std::string l_map_name = "map_"+l_way_id_stream.str()+"_c"+l_id_stream.str();
                     m_report << "<button type=\"button\" onclick=\"init('" << l_map_name << "','" << l_old_gpx << ".gpx','" << l_new_gpx << ".gpx'," << l_regress_new.get_average_x() << "," << l_regress_new.get_average_y() << ")\">Display Map</button>" << std::endl;
                     m_report << "<div id=\"" << l_map_name << "\" class=\"smallmap\">" <<std::endl ;
                     m_report << "</div>" << std::endl ;
+                    m_report << "<IMG SRC=\"./way_" << l_way_id_stream.str() << ".svg\" ALT=\"Way_" << l_way_id_stream.str() << ".svg\" TITLE=\"Way " << l_way_id_stream.str() << "\" ALIGN=\"MIDDLE\" /><BR>" << std::endl ;
                     m_report << "<HR/>" << std::endl ;
                   for(std::vector<node*>::iterator l_iter = l_modified_nodes.begin();
                         l_iter != l_modified_nodes.end();
@@ -272,7 +273,9 @@ namespace osm_diff_analyzer_node_alignment
     std::ofstream l_gpx_file(l_file_name.c_str());
     if(!l_gpx_file.is_open())
       {
-        std::cout << "Error when creating GPX file \"" << l_file_name << "\"" << std::endl ;
+	std::stringstream l_stream;
+	l_stream << "Error when creating GPX file \"" << l_file_name << "\"" ;
+	throw quicky_exception::quicky_runtime_exception(l_stream.str(),__LINE__,__FILE__);
       }
     
     l_gpx_file << "<?xml version=\"1.0\"?>" << std::endl ;
@@ -319,7 +322,7 @@ namespace osm_diff_analyzer_node_alignment
 
   float changeset::m_modif_rate_min_level = 0.9;
   float changeset::m_min_alignment_modification_rate = 100;
-  node_alignment_analyzer_common_api * changeset::m_api = NULL;
+  node_alignment_common_api * changeset::m_api = NULL;
   uint32_t changeset::m_min_way_node_nb = 2;
 }
 //EOF

@@ -241,7 +241,13 @@ namespace osm_diff_analyzer_node_alignment
         ++l_iter)
       {
         std::map<osm_api_data_types::osm_object::t_osm_id,changeset *>::iterator l_changeset_iter = m_changesets.find(*l_iter);
-        assert(l_changeset_iter != m_changesets.end());
+
+	if(l_changeset_iter == m_changesets.end())
+	  {
+	    std::stringstream l_stream;
+	    l_stream << "No changeset found with id " << *l_iter ;
+	    throw quicky_exception::quicky_logic_exception(l_stream.str(),__LINE__,__FILE__);
+	  }
         l_changeset_iter->second->search_aligned_ways(m_report);
         delete l_changeset_iter->second;
         m_changesets.erase(l_changeset_iter);
@@ -262,14 +268,14 @@ namespace osm_diff_analyzer_node_alignment
         if((*l_iter)->get_type() == osm_api_data_types::osm_change::MODIFICATION)
           {
             const osm_api_data_types::osm_core_element * const l_element = (*l_iter)->get_core_element();
-            assert(l_element);
+	    if(l_element == NULL) throw quicky_exception::quicky_logic_exception("Core element should not be NULL",__LINE__,__FILE__);
             switch(l_element->get_core_type())
               {
               case osm_api_data_types::osm_core_element::NODE :
-                generic_analyze<osm_api_data_types::osm_node>(l_element);
+                generic_analyze<osm_api_data_types::osm_node>(*l_element);
                 break;
               case osm_api_data_types::osm_core_element::WAY :
-                generic_analyze<osm_api_data_types::osm_way>(l_element);
+                generic_analyze<osm_api_data_types::osm_way>(*l_element);
                 break;
               case osm_api_data_types::osm_core_element::RELATION :
                 break;

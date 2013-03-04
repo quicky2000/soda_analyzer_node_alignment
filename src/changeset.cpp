@@ -148,7 +148,7 @@ namespace osm_diff_analyzer_node_alignment
                 ++l_iter_node)
               {
                 const osm_api_data_types::osm_node * l_previous_node = m_api->get_node_version((*l_iter_node)->get_id(),(*l_iter_node)->get_version()-1);
-                assert(l_previous_node);
+		if(l_previous_node == NULL) throw quicky_exception::quicky_runtime_exception("l_previous_node should not be NULL",__LINE__,__FILE__);
                 if(l_previous_node->get_lat() == (*l_iter_node)->get_lat() && l_previous_node->get_lon() == (*l_iter_node)->get_lon())
                   {
                     --l_nb_moved_node;

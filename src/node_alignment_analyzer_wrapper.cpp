@@ -68,8 +68,15 @@ namespace osm_diff_analyzer_node_alignment
   {
     void register_module(uintptr_t* p_api,uint32_t p_api_size)
     {
-      assert(p_api_size == MODULE_LIBRARY_IF_API_SIZE);
+      if(p_api_size != MODULE_LIBRARY_IF_API_SIZE)
+	{
+	  std::stringstream l_stream;
+	  l_stream << "p_api_size != MODULE_LIBRARY_IF_API_SIZE : " << p_api_size << " != " << MODULE_LIBRARY_IF_API_SIZE << ". Please use a newver version of saoda";
+	  throw quicky_exception::quicky_logic_exception(l_stream.str(),__LINE__,__FILE__);
+	}
+#ifdef DEBUG
       std::cout << "Registration of node_alignment analyzer API " << std::endl ;
+#endif
       p_api[osm_diff_analyzer_if::module_library_if::GET_API_VERSION] = (uintptr_t)node_alignment_analyzer_wrapper::get_api_version;
       p_api[osm_diff_analyzer_if::module_library_if::GET_API_SIZE] = (uintptr_t)node_alignment_analyzer_wrapper::get_api_size;
       p_api[osm_diff_analyzer_if::module_library_if::GET_DESCRIPTION] = (uintptr_t)node_alignment_analyzer_wrapper::get_node_alignment_description;

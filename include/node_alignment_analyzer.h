@@ -25,6 +25,7 @@
 #include "node_alignment_common_api.h"
 #include "module_configuration.h"
 #include "changeset.h"
+#include "quicky_exception.h"
 
 #include <inttypes.h>
 #include <map>
@@ -55,7 +56,7 @@ namespace osm_diff_analyzer_node_alignment
   private:
     void analyze_current_changesets(void);
     template <class T>
-      void generic_analyze(const osm_api_data_types::osm_core_element * const p_object);
+      void generic_analyze(const osm_api_data_types::osm_core_element & p_object);
 
     node_alignment_common_api & m_api;
     std::ofstream m_report;
@@ -65,19 +66,20 @@ namespace osm_diff_analyzer_node_alignment
   };
   //------------------------------------------------------------------------------
   template <class T>
-    void node_alignment_analyzer::generic_analyze(const osm_api_data_types::osm_core_element * const p_object)
+    void node_alignment_analyzer::generic_analyze(const osm_api_data_types::osm_core_element & p_object)
   {
 
 #ifndef FORCE_USE_OF_REINTERPRET_CAST
-    const T * const l_casted_object = dynamic_cast<const T * const>(p_object);
+    const T * const l_casted_object = dynamic_cast<const T * const>(&p_object);
 #else
-    const T * const l_casted_object = reinterpret_cast<const T * const>(p_object);
+    const T * const l_casted_object = reinterpret_cast<const T * const>(&p_object);
 #endif // FORCE_USE_OF_REINTERPRET_CAST
 
     if(l_casted_object==NULL)
       {
-        std::cout << "ERROR : invalid " << T::get_type_str() << " cast for object id " << p_object->get_id() << std::endl ;
-        exit(-1);
+	std::stringstream l_stream;
+        l_stream << "ERROR : invalid " << T::get_type_str() << " cast for object id " << p_object.get_id() ;
+	throw quicky_exception::quicky_runtime_exception(l_stream.str(),__LINE__,__FILE__);
       }
 
     // Extract changeset
@@ -90,7 +92,9 @@ namespace osm_diff_analyzer_node_alignment
     std::map<osm_api_data_types::osm_object::t_osm_id,changeset *>::iterator l_changeset_iter = m_changesets.find(l_changeset_id);
     if(l_changeset_iter == m_changesets.end())
       {
-        std::cout << "Create changeset " << l_changeset_id << std::endl ;
+	std::stringstream l_stream;
+        l_stream << "Create changeset " << l_changeset_id ;
+	m_api.ui_append_log_text(*this,l_stream.str());
         l_changeset_iter = m_changesets.insert(std::map<osm_api_data_types::osm_object::t_osm_id,changeset *>::value_type(l_changeset_id,new changeset(m_report,*this,l_changeset_id,l_user_name,l_user_id))).first;
       }
     l_changeset_iter->second->add(*l_casted_object);

@@ -70,7 +70,7 @@ namespace osm_diff_analyzer_node_alignment
   {
 
 #ifndef FORCE_USE_OF_REINTERPRET_CAST
-    const T * const l_casted_object = dynamic_cast<const T * const>(&p_object);
+    const T * const l_casted_object = dynamic_cast<const T * const>(&p_object) != NULL ? dynamic_cast<const T * const>(&p_object) : reinterpret_cast<const T * const>(&p_object);
 #else
     const T * const l_casted_object = reinterpret_cast<const T * const>(&p_object);
 #endif // FORCE_USE_OF_REINTERPRET_CAST
